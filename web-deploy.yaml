@@ -1,0 +1,46 @@
+---
+- name: Install Apache
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Install Apache
+      ansible.builtin.yum:
+        name: httpd
+        state: present
+
+    - name: Start & Enable Apache
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+
+- name: Download artifact from the internet & extract
+  hosts: localhost
+  tasks:
+    - name: Ensure local destination directory exists
+      ansible.builtin.file:
+        path: /root/ansible_projects/proj5/
+        state: directory
+        mode: "0755"
+
+    - name: Download the package
+      ansible.builtin.get_url:
+        url: "https://www.tooplate.com/zip-templates/2136_kool_form_pack.zip"
+        dest: /root/ansible_projects/proj5/2136_kool_form_pack.zip
+        mode: "0644"
+
+    - name: Extract artifact into ~/ansible_projects/proj5/
+      ansible.builtin.unarchive:
+        src: /root/ansible_projects/proj5/2136_kool_form_pack.zip
+        dest: /root/ansible_projects/proj5/
+        remote_src: no
+
+- name: Webpage Deploy
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Copy files to remote web servers
+      ansible.builtin.copy:
+        src: /root/ansible_projects/proj5/2136_kool_form_pack/
+        dest: /var/www/html/
+        backup: yes
