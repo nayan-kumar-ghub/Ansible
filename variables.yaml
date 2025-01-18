@@ -1,0 +1,44 @@
+#Usage of multiple variables in a single ansible playbook
+---
+- name: Variable Declarations
+  hosts: all
+  become: yes
+  vars:
+    NEW_HOSTNAME: aws_web_00 
+    USRNM: user1
+    COMM: creating user1 for test
+    DIRECTORY_PATH: /tmp/package
+    DIRECTORY_MODE: '0755'
+    SRC_FILE: /path/to/source/file
+    DEST_PATH: /remote/path/to/destination/
+    FILE_MODE: '0644'
+    PACKAGE_LIST:
+    - httpd
+    - vim
+    - curl
+  tasks:
+    - name: Change hostname
+      ansible.builtin.hostname:
+        name: "{{ NEW_HOSTNAME }}"
+    - name: Create User(s)
+      ansible.builtin.user:
+        name: "{{USRNM}}"
+        comment: "{{COMM}}"
+    - name: Create directory
+      ansible.builtin.file:
+        path: "{{ DIRECTORY_PATH }}"
+        state: directory
+        mode: "{{ DIRECTORY_MODE }}"
+    - name: Copy a file
+      ansible.builtin.copy:
+        src: "{{ SRC_FILE }}"
+        dest: "{{ DEST_PATH }}"
+        mode: "{{ FILE_MODE }}"
+    - name: Install packages
+      ansible.builtin.yum:
+        name: "{{ PACKAGE_LIST }}"
+        state: present
+      
+      register: varout
+    - debug :
+        var:  varout
