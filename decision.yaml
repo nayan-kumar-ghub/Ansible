@@ -1,0 +1,79 @@
+---
+#Install appropriate webserver based on OS Redhat/Debian
+- name: Install webserver based on OS
+  hosts: all
+  tasks:
+    - name: Install apache webserver
+      yum:
+        name: httpd
+        state: present
+        enabled: yes
+      when: ansible_os_family == "RedHat"
+    - name: Install apache webserver
+      apt:
+        name: apache2
+        state: present
+        enabled: yes
+      when: ansible_os_family == "Debian"
+
+#Install mysql server when hostname contains db00 keyword
+- name: Install sql server
+  hosts: all
+  tasks:
+    - name: Install mysql server
+      yum:
+        name: mysql-server
+        state: present
+        enabled: yes
+      when: '"db00" in ansible_hostname'
+
+#Ansible playbook to shutdown servers using CentOS 7 and 6
+- name: Shutdown CentOS 7 and 6
+  hosts: all
+  tasks:
+    - name: Shutdown CentOS 7
+      command: shutdown -h now
+      when: ansible_distribution == "CentOS" and ansible_distribution_version == "7"
+    - name: Shutdown CentOS 6
+      command: shutdown -h now
+      when: ansible_distribution == "CentOS" and ansible_distribution_version == "6"
+
+#Give access to a directory if username "nayan" is present in the server
+- name: Directory access to user nayan
+  hosts: all
+  tasks:
+    - name: Check if user nayan exists
+      command: id nayan
+      register: user_check
+      ignore_errors: yes
+    - name: Create user nayan
+      ansible.builtin.user:
+        name: nayan
+        state: present
+      when: ansible_user_id != "nayan"
+    - name: Give access to directory for user nayan
+      ansible.builtin.file:
+        path: /opt/devops_ansible_playbooks
+        state: directory
+        owner: nayan
+        group: nayan
+        mode: 0755
+
+#Copy web_deploy directory to webservers if /var/www/html directory is present
+- name: Copy web_deploy directory to webservers
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Check if /var/www/html directory exists
+      ansible.builtin.stat:
+        path: /var/www/html
+      register: html_dir_stat
+
+    - name: Copy web_deploy directory
+      ansible.builtin.copy:
+        src: /opt/web_deploy/
+        dest: /var/www/html
+        owner: root
+        group: root
+        mode: '0755'
+      when: html_dir_stat.stat.exists

@@ -1,0 +1,14 @@
+#Printing Facts and Variables using Ansible
+---
+- name: Print OS Info
+  hosts: all
+  tasks:
+    - name: Print OS Info
+      debug:
+        msg: "OS is {{ ansible_distribution }} {{ ansible_distribution_version }}"
+    - name: Print RAM Info
+      debug:
+        msg: "Total RAM is {{ ansible_memtotal_mb.real.free }} MB"
+    - name: Print CPU Info
+      debug:
+        msg: "CPU is {{ ansible_processor[2] }}"

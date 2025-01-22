@@ -1,0 +1,73 @@
+# Update the Message of the Day (MOTD) file with a custom message and notify users. 
+# Restart the SSH service if the MOTD file is updated.
+---
+- name: Update the Message of the Day (MOTD) file
+  hosts: all
+  become: yes
+  tasks:
+    - name: Deploy the MOTD file
+      ansible.builtin.template:
+        src: templates/motd.j2
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+      notify: Restart SSH service
+
+  handlers:
+    - name: Restart SSH service
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+        when: ansible_os_family == 'RedHat'
+
+# Update motd.j2 template file in the templates directory to use the motd_message variable:
+
+# Welcome to {{ ansible_hostname }}
+# This server runs on {{ ansible_distribution }} {{ ansible_distribution_version }}
+# Managed by Ansible, DevOps Team
+# Last login: {{ ansible_date_time.date }} from {{ ansible_default_ipv4.address }}
+#---------------------------------------------------------------------------------------------------------------------------#
+# When you use the ansible.builtin.template module, 
+# Ansible checks if the destination file (e.g., /etc/motd) 
+# differs from the generated output of the Jinja2 template (motd.j2).
+
+# If the content differs, Ansible considers the task to have "changed" and triggers any associated handlers (via notify).
+
+# If the content is identical, Ansible skips triggering the handler since no changes occurred.
+#---------------------------------------------------------------------------------------------------------------------------#
+
+# Ansible Playbook to push /ansible_template/ directory to a new user's home directory, when user is added to devops group.
+---
+- name: Create multiple users and push directory to their home directory
+  hosts: all
+  become: yes
+  vars:
+    # List of users to be created
+    users:
+      - nayan
+      - raju
+      - sridhar
+    # Source directory to copy
+    src_directory: /ansible_template/
+  
+  tasks:
+    - name: Create users
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+        shell: /bin/bash
+        comment: "User created via Ansible"
+      loop: "{{ users }}"
+      notify: "Push directory to home directory"  # Notify handler to run after user is created
+
+  handlers:
+    - name: Push directory to home directory
+      ansible.builtin.copy:
+        src: "{{ src_directory }}"
+        dest: "/home/{{ item }}"
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: '0755'
+      loop: "{{ users }}"

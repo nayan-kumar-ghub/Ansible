@@ -1,0 +1,49 @@
+#Adding multiple users to servers using Ansible loop
+- name: Add multiple users to servers
+  hosts: all
+  tasks:
+    - name: Add multiple users
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+        groups: "wheel"
+      loop:
+        - user1
+        - user2
+        - user3
+        - user4
+        - user5
+
+#Adding multiple users to servers using Ansible loop along with variable
+- name: Add multiple users to servers using variable
+  hosts: all
+  vars:
+    user-list
+      - user1
+      - user2
+      - user3
+      - user4
+      - user5
+  tasks:
+    - name: Add multiple users
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+        groups: "wheel"
+      loop: "{{ user-list }}"
+
+#Installing basic packages using Ansible loop
+- name: Install basic packages
+  hosts: all
+  tasks:
+    - name: Install basic packages
+      ansible.builtin.yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - httpd
+        - mariadb
+        - wget
+        - unzip
+        - git
+        - zip

@@ -1,0 +1,43 @@
+#Using j2 template update ntp records for CentOS
+---
+- name: Update NTP configuration
+  hosts: all
+  become: yes
+  vars:
+    ntp0: 0.north-america.pool.ntp.org
+    ntp1: 1.north-america.pool.ntp.org
+    ntp2: 2.north-america.pool.ntp.org
+    ntp3: 3.north-america.pool.ntp.org
+  tasks:
+    - name: Deploy the NTP configuration file
+      ansible.builtin.template:
+        src: templates/ntp.conf.j2
+        dest: /etc/ntp.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+    - name: Restart NTP service
+      ansible.builtin.service:
+        name: ntpd
+        state: restarted
+      when: ansible_os_family == 'RedHat'
+#****************************************************************************#
+# The original ntp.conf file contains hardcoded NTP server entries:
+
+# Use public servers from the pool.ntp.org project.
+# Please consider joining the pool (https://www.pool.ntp.org/join.html).
+
+# pool 2.centos.pool.ntp.org iburst
+#****************************************************************************#
+# Create a Jinja2 Template ntp.conf.j2 in the templates directory:
+
+# Use public servers from the pool.ntp.org project.
+# Please consider joining the pool (https://www.pool.ntp.org/join.html).
+
+#pool {{ ntp0 }} iburst
+#pool {{ ntp1 }} iburst
+#pool {{ ntp2 }} iburst
+#pool {{ ntp3 }} iburst
+#****************************************************************************#
+# Run the playbook to update the NTP configuration file:
